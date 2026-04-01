@@ -1,4 +1,5 @@
 import hashlib
+import logging
 from datetime import datetime
 
 from fastapi import FastAPI, Header, HTTPException
@@ -25,6 +26,7 @@ from storage import (
 from telegram_gateway import send_telegram_message, set_telegram_webhook
 
 app = FastAPI(title="Finny Webhooks")
+logger = logging.getLogger(__name__)
 
 
 class MacroDroidSMSPayload(BaseModel):
@@ -209,6 +211,7 @@ async def telegram_webhook(update: dict):
     try:
         append_transaction_to_sheet(transaction_payload)
     except Exception as exc:
+        logger.exception("Google Sheets append failed for pending transaction %s", pending["id"])
         update_pending_transaction(
             pending["id"],
             last_error=str(exc),
@@ -216,7 +219,7 @@ async def telegram_webhook(update: dict):
         )
         raise HTTPException(
             status_code=500,
-            detail="Google Sheets append failed, so the transaction is still pending.",
+            detail=f"Google Sheets append failed: {exc}",
         ) from exc
 
     save_transaction(
