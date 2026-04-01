@@ -119,6 +119,7 @@ async def macrodroid_sms_webhook(
             "duplicate": True,
             "message": "This SMS was already received earlier.",
         }
+    logger.info("MacroDroid payload received: message=%r sender=%r received_at=%r", payload.message, payload.sender, payload.received_at)
 
     parsed = parse_bank_message(payload.message)
     if not parsed["parse_success"]:
